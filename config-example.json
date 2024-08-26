@@ -1,0 +1,20 @@
+{
+  "s3_storages":
+    [
+      {
+        "name": "Selectel",
+        "url": "https://s3.storage.selcloud.ru",
+        "access_key": "",
+        "secret_key": "",
+        "items": [
+          {
+            "name": "folder1",
+            "path": "/home/user/folder1",
+            "bucket": "home-user-bucket",
+            "include": ["jpg", "avi", "mov", "mp4"],
+            "exclude": []
+          }
+        ]
+      }
+    ]
+}

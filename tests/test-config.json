@@ -1,0 +1,20 @@
+{
+  "s3_storages":
+    [
+      {
+        "name": "Selectel",
+        "url": "https://s3.storage.selcloud.ru",
+        "access_key": "not needed for test",
+        "secret_key": "not needed for test",
+        "items": [
+          {
+            "name": "Photo",
+            "path": "this path will be changed for test",
+            "bucket": "your_bucket_name",
+            "include": ["png", "avi", "mov", "mp4", "jpg"],
+            "exclude": []
+          }
+        ]
+      }
+    ]
+}
