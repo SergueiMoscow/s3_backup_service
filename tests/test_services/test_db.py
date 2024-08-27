@@ -3,7 +3,7 @@ from sqlalchemy import select
 
 from db.engine import Session
 from db.models import S3StorageOrm, BackupFileOrm
-from schemas import S3StorageDTO, S3BackupFileDTO
+from common.schemas import S3StorageDTO, S3BackupFileDTO
 from services.backup_files import create_s3_backup_file_service
 from services.s3_storages import create_s3_storage_service, update_s3_storage_service, get_s3_storage_by_id_service, \
     create_or_get_storage_by_name

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from common.BackupConfig import BackupConfig
-from schemas import BackupStorage, BasicBackupStorage, BackupDTO
+from common.schemas import BasicBackupStorage, BackupDTO
 from services.backup import backup
 from services.verify_api_key import verify_api_key
 

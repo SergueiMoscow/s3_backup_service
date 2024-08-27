@@ -1,4 +1,4 @@
-from schemas import BackupItem
+from common.schemas import BackupItem
 from common import BackupConfig
 
 

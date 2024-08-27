@@ -2,7 +2,7 @@ from sqlalchemy import update, select
 from sqlalchemy.orm import Session
 
 from db.models import S3StorageOrm
-from schemas import S3StorageAddDTO
+from common.schemas import S3StorageAddDTO
 
 
 def create_storage(session: Session, storage: S3StorageOrm) -> S3StorageOrm:

@@ -14,7 +14,7 @@ from db.engine import Session
 from db.models import S3StorageOrm, BackupFileOrm
 from repositories.backup_files import create_backup_file
 from repositories.s3_storages import create_storage
-from schemas import S3StorageDTO, S3BackupFileDTO, S3BackupFileRelDTO, S3StorageRelDTO, BackupItem
+from common.schemas import S3StorageDTO, S3BackupFileDTO, S3BackupFileRelDTO, S3StorageRelDTO, BackupItem
 import os
 import time
 

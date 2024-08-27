@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 # from setuptools.extern import names
 
 from common.BackupConfig import BackupConfig
-from schemas import BackupItem, BackupStorage, S3StorageDTO, S3BackupFileDTO
+from common.schemas import BackupItem, BackupStorage, S3StorageDTO, S3BackupFileDTO
 from services.S3Client import S3Client
 import logging
 

@@ -3,7 +3,7 @@ import os
 import sys
 
 from common.settings import settings, ROOT_DIR
-from schemas import BackupStorage
+from common.schemas import BackupStorage
 
 
 class BackupConfig:

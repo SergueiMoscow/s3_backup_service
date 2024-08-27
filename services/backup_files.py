@@ -1,14 +1,9 @@
-import copy
-import os
-
 from db.engine import Session
 from db.models import S3StorageOrm, BackupFileOrm
 from repositories.backup_files import create_backup_file, get_backup_file_by_id, update_backup_file, \
     get_backup_file_by_details
-from repositories.s3_storages import create_storage, update_storage, get_storage_by_id, delete_storage
-from schemas import S3StorageDTO, BackupItem, S3BackupFileDTO, S3BackupFileRelDTO
-from services.Encryption import encryption_service
-from services.s3_storages import decrypt_storage
+from repositories.s3_storages import get_storage_by_id, delete_storage
+from common.schemas import S3BackupFileDTO
 
 fields_to_encrypt = ('url', 'access_key', 'secret_key')
 

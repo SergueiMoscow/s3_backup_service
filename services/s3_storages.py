@@ -4,7 +4,7 @@ from db.engine import Session
 from db.models import S3StorageOrm
 from repositories.s3_storages import create_storage, update_storage, get_storage_by_id, delete_storage, \
     get_storage_by_name
-from schemas import S3StorageDTO
+from common.schemas import S3StorageDTO
 from services.Encryption import encryption_service
 
 fields_to_encrypt = ('url', 'access_key', 'secret_key')
