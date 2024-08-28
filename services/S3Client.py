@@ -1,6 +1,10 @@
 from contextlib import asynccontextmanager
 
 from aiobotocore.session import get_session, ClientCreatorContext
+from botocore.exceptions import ClientError
+from fastapi import HTTPException
+
+from api.exceptions import S3BucketError
 
 
 class S3Client:
@@ -29,9 +33,18 @@ class S3Client:
         object_name: str,
     ):
         async with self.get_client() as client:
-            with open(file_path, 'rb') as file:
-                await client.put_object(
-                    Bucket=bucket_name,
-                    Key=object_name,
-                    Body=file,
+            try:
+                with open(file_path, 'rb') as file:
+                    await client.put_object(
+                        Bucket=bucket_name,
+                        Key=object_name,
+                        Body=file,
+                    )
+            except ClientError as e:
+                raise S3BucketError(
+                    status_code=400,
+                    detail=e.response
                 )
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
