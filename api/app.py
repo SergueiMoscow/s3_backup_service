@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import uvicorn
-from api import router as api_router
+from api.endpoints import router as api_router
 from common.settings import settings
 
 app = FastAPI(docs_url='/')

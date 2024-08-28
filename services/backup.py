@@ -118,10 +118,15 @@ async def backup_item(storage: S3StorageDTO, client: S3Client, item: BackupItem,
             )
             if upload_file_dto is None:
                 upload_file_dto = await create_upload_file_info(storage=storage, backup_item=item, top_level_path=top_level_path)
-            logger.info(f'Uploading {object_name}')
             item_path_struct_time = time.gmtime(os.path.getmtime(item.path))
             item_path_datetime = datetime(*item_path_struct_time[:6])
-            if os.path.getsize(item.path) != upload_file_dto.file_size or item_path_datetime != upload_file_dto.file_time.replace(microsecond=0):
+            need_to_upload = False
+            if (
+                os.path.getsize(item.path) != upload_file_dto.file_size or
+                item_path_datetime != upload_file_dto.file_time.replace(microsecond=0)
+            ):
+                need_to_upload = True
+                logger.info(f'Uploading {object_name}')
 
                 await client.upload_file(
                     bucket_name=item.bucket,
@@ -130,7 +135,10 @@ async def backup_item(storage: S3StorageDTO, client: S3Client, item: BackupItem,
                 )
             # Регистрируем файл в БД
             await register_uploaded_file(storage_id=storage.id, upload_file_dto=upload_file_dto)
-            logger.info(f'{object_name} uploaded to {item.bucket}')
+            if need_to_upload:
+                logger.info(f'{object_name} uploaded to {item.bucket}')
+            else:
+                logger.info(f'{object_name} already exists in {item.bucket}')
 
 
 async def backup_storage(storage: BackupStorage, item_name: str | None = None):
