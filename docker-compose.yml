@@ -13,6 +13,4 @@ services:
       - "/:/host_root" # Примонтировать корневую директорию сервера
     environment:
       DATABASE_URI: ${DB_DSN}
-    depends_on:
-      - migrations
     restart: always
