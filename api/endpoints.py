@@ -1,4 +1,5 @@
 from fastapi import Depends
+from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from common.BackupConfig import BackupConfig
 from common.schemas import BasicBackupStorage, BackupDTO

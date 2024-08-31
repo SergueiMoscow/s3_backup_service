@@ -3,8 +3,7 @@ import time
 from datetime import datetime, timezone
 from typing import List, Optional
 from urllib.parse import urljoin
-
-# from setuptools.extern import names
+from api.websocket import socket_manager
 
 from common.BackupConfig import BackupConfig
 from common.schemas import BackupItem, BackupStorage, S3StorageDTO, S3BackupFileDTO
@@ -14,6 +13,7 @@ import logging
 from services.backup_files import get_backup_file_by_details_service, create_s3_backup_file_service, \
     update_s3_backup_file_service
 from services.s3_storages import create_or_get_storage_by_name
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -35,7 +35,11 @@ console_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-async def is_extension_included_in_backup(extension: str, include: List[str], exclude: List[str]) -> bool:
+async def is_extension_included_in_backup(
+    extension: str,
+    include: List[str],
+    exclude: List[str]
+) -> bool:
     # Если расширение есть в списке include, возвращаем True
     if include and extension in include:
         return True
@@ -95,7 +99,9 @@ async def create_upload_file_info(storage: S3StorageDTO, backup_item: BackupItem
 async def backup_item(storage: S3StorageDTO, client: S3Client, item: BackupItem, top_level_path: str):
     """Рекурсивная"""
     if item.is_directory:
-        logger.info(f'Processing item.path')
+        message = f'Processing {item.path}'
+        logger.info(message)
+        await socket_manager.send_message(message)
         folder_elements = os.listdir(item.path)
         for folder_element in folder_elements:
             # folder_element привести к виду BackupItem:
@@ -126,7 +132,9 @@ async def backup_item(storage: S3StorageDTO, client: S3Client, item: BackupItem,
                 item_path_datetime != upload_file_dto.file_time.replace(microsecond=0)
             ):
                 need_to_upload = True
-                logger.info(f'Uploading {object_name}')
+                message = f'Uploading {object_name}'
+                logger.info(message)
+                await socket_manager.send_message(message)
 
                 await client.upload_file(
                     bucket_name=item.bucket,
@@ -136,13 +144,17 @@ async def backup_item(storage: S3StorageDTO, client: S3Client, item: BackupItem,
             # Регистрируем файл в БД
             await register_uploaded_file(storage_id=storage.id, upload_file_dto=upload_file_dto)
             if need_to_upload:
-                logger.info(f'{object_name} uploaded to {item.bucket}')
+                message = f'{object_name} uploaded to {item.bucket}'
             else:
-                logger.info(f'{object_name} already exists in {item.bucket}')
+                message = f'{object_name} already exists in {item.bucket}'
+            logger.info(message)
+            await socket_manager.send_message(message)
 
 
 async def backup_storage(storage: BackupStorage, item_name: str | None = None):
-    logger.info(f'Processing storage {storage.name}')
+    message = f'Processing storage {storage.name}'
+    logger.info(message)
+    await socket_manager.send_message(message)
     # Регистрируем storage в БД
     storage_dto = await get_or_register_storage_dto(storage=storage)
     # Создаём s3 клиента
@@ -161,8 +173,12 @@ async def backup(
     item_name: Optional[str] = None
 ):
     backup_config = BackupConfig()
-    logger.info('Config loaded')
+    message = 'Config loaded'
+    logger.info(message)
+    await socket_manager.send_message(message)
     for s3_storage in backup_config.backup_storages:
         if storage_name is None or s3_storage.name.lower() == storage_name.lower():
             await backup_storage(s3_storage, item_name)
-    logger.info('Done!')
+    message = 'Done!'
+    logger.info(message)
+    await socket_manager.send_message(message)
