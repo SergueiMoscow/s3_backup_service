@@ -17,7 +17,7 @@ db_url = get_dsn()
 
 engine = create_engine(
     url=db_url,
-    echo=True,
+    echo=False,
     pool_size=5,
     max_overflow=10,
     connect_args={"check_same_thread": False},
