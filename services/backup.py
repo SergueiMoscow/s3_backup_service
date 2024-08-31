@@ -96,7 +96,13 @@ async def create_upload_file_info(storage: S3StorageDTO, backup_item: BackupItem
     )
     return backup_file_dto
 
-async def backup_item(storage: S3StorageDTO, client: S3Client, item: BackupItem, top_level_path: str):
+async def backup_item(
+    storage: S3StorageDTO,
+    client: S3Client,
+    item: BackupItem,
+    top_level_path: str
+):
+    socket_manager.send_message(f'backup_item {item.name}')
     """Рекурсивная"""
     if item.is_directory:
         message = f'Processing {item.path}'
@@ -112,6 +118,7 @@ async def backup_item(storage: S3StorageDTO, client: S3Client, item: BackupItem,
                 include=item.include,
                 exclude=item.exclude,
             )
+            await socket_manager.send_message(f'recursion: backup_item {next_backup_item.name}')
             await backup_item(storage=storage, client=client, item=next_backup_item, top_level_path=top_level_path)
     elif item.is_file:
         object_name=item.path.replace(top_level_path, '')
@@ -166,6 +173,7 @@ async def backup_storage(storage: BackupStorage, item_name: str | None = None):
     )
     for item in storage.items:
         if item_name is None or item.name.lower == item_name.lower():
+            await socket_manager.send_message(f'Running backup_item {item_name.lower()}')
             await backup_item(storage=storage_dto, client=client, item=item, top_level_path=item.path)
 
 
@@ -179,6 +187,7 @@ async def backup(
     await socket_manager.send_message(message)
     for s3_storage in backup_config.backup_storages:
         if storage_name is None or s3_storage.name.lower() == storage_name.lower():
+            await socket_manager.send_message(f'Running backup_storage with item {item_name}')
             await backup_storage(s3_storage, item_name)
     message = 'Done!'
     logger.info(message)
