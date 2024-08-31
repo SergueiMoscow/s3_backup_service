@@ -172,7 +172,7 @@ async def backup_storage(storage: BackupStorage, item_name: str | None = None):
         endpoint_url=storage.url,
     )
     for item in storage.items:
-        if item_name is None or item.name.lower == item_name.lower():
+        if item_name is None or item.name.lower() == item_name.lower():
             if item_name is not None:
                 await socket_manager.send_message(f'Running backup_item {item_name.lower()}')
             else:

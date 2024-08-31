@@ -9,7 +9,6 @@ from api.app import app
 from common import BackupConfig
 from common.settings import settings
 
-# client = TestClient(app)
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('apply_migrations')
@@ -25,7 +24,8 @@ async def test_post_backup_success(mock_get_client):
             headers={"api_key": settings.API_KEY},
             json={
                 "storage": backup_config['s3_storages'][0]['name'],
-                "item": backup_config['s3_storages'][0]['items'][0]['name']},
+                "item": backup_config['s3_storages'][0]['items'][0]['name']
+            },
         )
         assert response.status_code == 200
         assert response.json() == {"status": "success"}
@@ -54,3 +54,26 @@ async def test_post_backup_invalid_api_key():
         )
         assert response.status_code == 403
         assert response.json() == {"detail": "Доступ запрещён"}
+
+
+@pytest.mark.asyncio
+async def test_backup_one_item():
+    transport = ASGITransport(app=app)
+    backup_config = BackupConfig.BackupConfig().get_settings()
+    json = {
+        "storage": backup_config['s3_storages'][0]['name'],
+        "item": backup_config['s3_storages'][0]['items'][0]['name']
+    }
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        with patch('api.endpoints.backup') as mock_backup:
+
+            response = await client.post(
+                "/backup",
+                json=json,
+                headers={"api_key": settings.API_KEY},
+            )
+            assert response.status_code == 200
+            mock_backup.assert_called_once_with(
+                storage_name=backup_config['s3_storages'][0]['name'],
+                item_name=backup_config['s3_storages'][0]['items'][0]['name'],
+            )

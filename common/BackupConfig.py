@@ -18,5 +18,7 @@ class BackupConfig:
         with open(settings.CONFIG_FILE) as f:
             settings_dict = json.load(f)
         if "pytest" in sys.modules:
-            settings_dict['s3_storages'][0]['items'][0]['path'] = os.path.join(ROOT_DIR, 'tests', 'files_for_tests')
+            for storage in settings_dict['s3_storages']:
+                for item in storage['items']:
+                    item['path'] = os.path.join(ROOT_DIR, 'tests', 'files_for_tests')
         return settings_dict

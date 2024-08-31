@@ -1,3 +1,4 @@
+from common.BackupConfig import BackupConfig
 from services.backup import backup, backup_item
 
 import pytest
@@ -21,3 +22,15 @@ async def test_files_uploaded():
         mock_get_client.return_value.__aenter__.return_value = mock_s3_client
         await backup()
         mock_s3_client.put_object.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('apply_migrations')
+@patch("services.backup.backup_item")
+async def test_backup_item(mock_backup_item):
+    backup_config = BackupConfig().get_settings()
+    await backup(
+        storage_name=backup_config['s3_storages'][0]['name'],
+        item_name=backup_config['s3_storages'][0]['items'][0]['name'],
+    )
+    mock_backup_item.assert_called_once()
