@@ -13,6 +13,7 @@ FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get('/config', response_model=list[BasicBackupStorage])
