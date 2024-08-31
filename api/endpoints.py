@@ -28,6 +28,6 @@ async def run_backup(
     data: BackupDTO,
     api_key: str = Depends(verify_api_key)
 ):
-    logger.info(f'Running backup({data.storge}, {data.item}')
+    logger.info(f'Running backup({data.storage}, {data.item}')
     await backup(storage_name=data.storage, item_name=data.item)
     return {"status": "success"}
