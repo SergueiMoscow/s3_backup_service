@@ -102,7 +102,7 @@ async def backup_item(
     item: BackupItem,
     top_level_path: str
 ):
-    socket_manager.send_message(f'backup_item {item.name}')
+    await socket_manager.send_message(f'backup_item {item.name}')
     """Рекурсивная"""
     if item.is_directory:
         message = f'Processing {item.path}'
@@ -176,7 +176,7 @@ async def backup_storage(storage: BackupStorage, item_name: str | None = None):
             if item_name is not None:
                 await socket_manager.send_message(f'Running backup_item {item_name.lower()}')
             else:
-                await socket_manager.send_message(f'Running backup_item {item.name} ALL ITEMS}')
+                await socket_manager.send_message(f'Running backup_item {item.name} ALL ITEMS')
             await backup_item(storage=storage_dto, client=client, item=item, top_level_path=item.path)
 
 
