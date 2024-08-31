@@ -5,6 +5,7 @@ from botocore.exceptions import ClientError
 from fastapi import HTTPException
 
 from api.exceptions import S3BucketError
+from api.websocket import ConnectionManager
 
 
 class S3Client:
@@ -31,6 +32,7 @@ class S3Client:
         bucket_name: str,
         file_path: str,
         object_name: str,
+        socket_manager: ConnectionManager | None,
     ):
         async with self.get_client() as client:
             try:
@@ -41,6 +43,8 @@ class S3Client:
                         Body=file,
                     )
             except ClientError as e:
+                if socket_manager is not None:
+                    await socket_manager.send_message(f'Error on upload file {e.response}')
                 raise S3BucketError(
                     status_code=400,
                     detail=e.response

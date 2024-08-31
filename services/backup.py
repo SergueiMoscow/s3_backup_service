@@ -140,6 +140,7 @@ async def backup_item(storage: S3StorageDTO, client: S3Client, item: BackupItem,
                     bucket_name=item.bucket,
                     file_path=item.path,
                     object_name=object_name,
+                    socket_manager=socket_manager,
                 )
             # Регистрируем файл в БД
             await register_uploaded_file(storage_id=storage.id, upload_file_dto=upload_file_dto)
