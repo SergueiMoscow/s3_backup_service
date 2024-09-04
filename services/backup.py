@@ -71,7 +71,7 @@ async def register_uploaded_file(storage_id: int, upload_file_dto: S3BackupFileD
 
 async def get_upload_file_info_from_db(storage: S3StorageDTO, item: BackupItem, top_level_path: str) -> S3BackupFileDTO:
     full_path, filename = os.path.split(item.path)
-    # В БД храним путь БЕЗ top_level (БЕЗ storage.items.path) и без имени файла
+    # В БД храним путь БЕЗ top_level (БЕЗ storage.items.full_path) и без имени файла
     path = full_path.replace(top_level_path, '')
     backup_file_dto = get_backup_file_by_details_service(
         storage_id=storage.id,
@@ -102,10 +102,9 @@ async def backup_item(
     item: BackupItem,
     top_level_path: str
 ):
-    await socket_manager.send_message(f'backup_item {item.name}')
     """Рекурсивная"""
     if item.is_directory:
-        message = f'Processing {item.path}'
+        message = f'Processing {item.path} -> {item.name}'
         logger.info(message)
         await socket_manager.send_message(message)
         folder_elements = os.listdir(item.path)
@@ -118,7 +117,6 @@ async def backup_item(
                 include=item.include,
                 exclude=item.exclude,
             )
-            await socket_manager.send_message(f'recursion: backup_item {next_backup_item.name}')
             await backup_item(storage=storage, client=client, item=next_backup_item, top_level_path=top_level_path)
     elif item.is_file:
         object_name=item.path.replace(top_level_path, '')

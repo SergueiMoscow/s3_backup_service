@@ -34,7 +34,7 @@ def apply_migrations():
     yield command, alembic_cfg
 
     # command.downgrade(alembic_cfg, 'base')
-    # if os.path.exists(db_path):
+    # if os.full_path.exists(db_path):
     #     os.remove(db_path)
 
 

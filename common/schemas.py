@@ -35,13 +35,13 @@ class BackupItem(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def validate_item_exists(cls, data: Any):
-        if os.path.isfile(data['path']):
+        if os.path.isfile(data['full_path']):
             data['is_file'] = True
-        elif os.path.isdir(data['path']):
+        elif os.path.isdir(data['full_path']):
             data['is_directory'] = True
         else:
-            print(f'Invalid path {data["path"]}')
-            raise ValueError(f'Invalid path {data["path"]}')
+            print(f'Invalid full_path {data["full_path"]}')
+            raise ValueError(f'Invalid full_path {data["full_path"]}')
         return data
 
 # For api POST backup:
@@ -73,7 +73,7 @@ class S3BackupFileDTO(S3BackupFileAddDTO):
     """For db backup file (model)
     id: int | None
     storage_id: int
-    path: str
+    full_path: str
     file_name: str
     file_size: int
     file_time: datetime
@@ -90,3 +90,9 @@ class S3BackupFileRelDTO(S3BackupFileDTO):
 
 class S3StorageRelDTO(S3StorageDTO):
     items: list['S3BackupFileDTO'] = []
+
+# For DB statistics
+class ItemBackedUp(BaseModel):
+    item_path: str  # == full_path из JSON
+    files_count: int
+    size: int

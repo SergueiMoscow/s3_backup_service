@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     API_KEY: str = 'api_key_for_requests'
     SECRET_KEY: str = 'secret_key_for_encryption'
     PORT: int = 8000
+    PREFIX: str = 'host_root'
     model_config = SettingsConfigDict(
         env_file=os.path.join(ROOT_DIR, '.env'),
         env_file_encoding='utf-8',

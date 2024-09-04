@@ -20,11 +20,16 @@ class S3StorageOrm(Base):
     access_key = Column(String(STRING_255), nullable=False)
     secret_key = Column(String(STRING_255), nullable=False)
     created_at = Column(DateTime, default=func.now())
-    files: Mapped[list['BackupFileOrm']] = relationship(
-        back_populates='storage',
+    items: Mapped[list['ItemOrm']] = relationship(
+        back_populates='item',
         cascade='all, delete-orphan',
         lazy='selectin'
     )
+    # files: Mapped[list['BackupFileOrm']] = relationship(
+    #     back_populates='storage',
+    #     cascade='all, delete-orphan',
+    #     lazy='selectin'
+    # )
 
     def __repr__(self):
         return f"S3StorageOrm(id={self.id}, name='{self.name}', url='{self.url}')"
@@ -33,10 +38,20 @@ class S3StorageOrm(Base):
         Index('idx_s3storage_name', 'name'),
     )
 
+
+class ItemOrm(Base):
+    __tablename__ = 'items'
+    id: Mapped[intpk]
+    storage_id = mapped_column(ForeignKey('s3_storages.id', ondelete='CASCADE'), nullable=False)
+    path = Column(String(STRING_255), nullable=False)
+    storage: Mapped['S3StorageOrm'] = relationship('S3StorageOrm', back_populates='files')
+
+
 class BackupFileOrm(Base):
     __tablename__ = 'backup_file'
     id: Mapped[intpk]
     storage_id = mapped_column(ForeignKey('s3_storages.id', ondelete='CASCADE'), nullable=False)
+    item_id = mapped_column(ForeignKey('items.id', ondelete='CASCADE'), nullable=False)
     path = Column(String(STRING_255), nullable=False)
     file_name = Column(String(STRING_255), nullable=False)
     file_size = Column(Integer, nullable=False)
@@ -44,10 +59,14 @@ class BackupFileOrm(Base):
     created_at = Column(DateTime, default=func.now())
 
     storage: Mapped['S3StorageOrm'] = relationship('S3StorageOrm', back_populates='files')
+    item: Mapped['ItemOrm'] = relationship('ItemOrm', back_populates='files')
 
     def __repr__(self):
         return f"BackupFileOrm(id={self.id}, file_name='{self.file_name}', file_size={self.file_size})"
 
+    # __table_args__ = (
+    #     Index('idx_storage_file_name', 'storage_id', 'file_name'),
+    # )
     __table_args__ = (
-        Index('idx_storage_file_name', 'storage_id', 'file_name'),
+        Index('idx_item_file_name', 'item_id', 'path', 'file_name'),
     )

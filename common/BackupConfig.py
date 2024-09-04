@@ -20,5 +20,5 @@ class BackupConfig:
         if "pytest" in sys.modules:
             for storage in settings_dict['s3_storages']:
                 for item in storage['items']:
-                    item['path'] = os.path.join(ROOT_DIR, 'tests', 'files_for_tests')
+                    item['full_path'] = os.path.join(ROOT_DIR, 'tests', 'files_for_tests')
         return settings_dict
