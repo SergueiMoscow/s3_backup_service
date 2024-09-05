@@ -43,8 +43,9 @@ class S3Client:
                         Body=file,
                     )
             except ClientError as e:
+                message = f'Error uploading file {object_name} to bucket {bucket_name}, error: {e.response}'
                 if socket_manager is not None:
-                    await socket_manager.send_message(f'Error on upload file {e.response}')
+                    await socket_manager.send_message(message)
                 raise S3BucketError(
                     status_code=400,
                     detail=e.response
