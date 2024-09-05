@@ -2,11 +2,17 @@ import pytest
 from sqlalchemy import select
 
 from db.engine import Session
-from db.models import S3StorageOrm, BackupFileOrm
+from db.models import S3StorageOrm, BackupFileOrm, BucketOrm
 from common.schemas import S3StorageDTO, S3BackupFileDTO
-from services.backup_files import create_s3_backup_file_service
-from services.s3_storages import create_s3_storage_service, update_s3_storage_service, get_s3_storage_by_id_service, \
+from services.backup_files_orm import create_s3_backup_file_service
+from services.bucket_orm import create_or_get_bucket_by_storage_and_path
+from services.s3_storages_orm import (
+    create_s3_storage_service,
+    update_s3_storage_service,
+    get_s3_storage_by_id_service,
     create_or_get_storage_by_name
+)
+from tests.conftest import TEST_BACKUP_DIR
 
 
 @pytest.mark.usefixtures('apply_migrations')
@@ -44,7 +50,9 @@ def test_update_s3_storage(created_s3_storage_dto, faker):
 def test_create_backup_file(created_s3_storage_orm, s3_backup_file_schema):
     created_s3_backup_file = create_s3_backup_file_service(s3_backup_file_schema, created_s3_storage_orm)
     with Session() as session:
-        check_created_backup_file = session.scalar(select(BackupFileOrm).where(BackupFileOrm.id == created_s3_backup_file.id))
+        check_created_backup_file = session.scalar(
+            select(BackupFileOrm).where(BackupFileOrm.id == created_s3_backup_file.id)
+        )
         assert created_s3_backup_file.id == check_created_backup_file.id
 
 
@@ -61,3 +69,16 @@ def test_create_or_get_storage_by_name_not_found(s3_storage_schema):
     assert found_storage.name == s3_storage_schema.name
     assert found_storage.url == s3_storage_schema.url
     assert found_storage.id is not None
+
+
+@pytest.mark.usefixtures('apply_migrations')
+def test_create_or_get_bucket_by_storage_and_path(created_s3_storage_dto):
+    create_or_get_bucket_by_storage_and_path(created_s3_storage_dto, TEST_BACKUP_DIR)
+    with Session() as session:
+        check_created_bucket = session.query(BucketOrm).filter_by(
+            storage_id=created_s3_storage_dto.id,
+            path=TEST_BACKUP_DIR,
+        ).one()
+        assert check_created_bucket is not None
+        assert check_created_bucket.path == TEST_BACKUP_DIR
+        assert check_created_bucket.id > 0

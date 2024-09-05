@@ -1,12 +1,12 @@
 from db.engine import Session
-from db.models import S3StorageOrm, BackupFileOrm
+from db.models import S3StorageOrm, BackupFileOrm, BucketOrm
 from repositories.backup_files import create_backup_file, get_backup_file_by_id, update_backup_file, \
     get_backup_file_by_details
+from repositories.buckets import get_bucket_by_storage_and_path_repository, create_bucket
 from repositories.s3_storages import get_storage_by_id, delete_storage
-from common.schemas import S3BackupFileDTO
+from common.schemas import S3BackupFileDTO, S3StorageDTO, BucketDTO
 
 fields_to_encrypt = ('url', 'access_key', 'secret_key')
-
 
 
 def create_s3_backup_file_service(
@@ -34,11 +34,17 @@ def update_s3_backup_file_service(backup_file_id: int, s3_backup_file_updated: S
         return update_backup_file(session, backup_file_id, s3_backup_file_updated.model_dump())
 
 
-def get_backup_file_by_details_service(storage_id: int, path: str, file_name: str) -> S3BackupFileDTO | None:
+def get_backup_file_by_details_service(
+    storage_id: int,
+    bucket_id: int,
+    path: str,
+    file_name: str
+) -> S3BackupFileDTO | None:
     with Session() as session:
         backup_file_orm = get_backup_file_by_details(
             session=session,
             storage_id=storage_id,
+            bucket_id=bucket_id,
             path=path,
             file_name=file_name,
         )
@@ -51,4 +57,5 @@ def get_backup_file_by_details_service(storage_id: int, path: str, file_name: st
 def delete_storage_service(s3_storage_id: int) -> None:
     with Session() as session:
         s3_storage = get_storage_by_id(session, s3_storage_id)
-        delete_storage(s3_storage)
+        delete_storage(session=session, storage_model=s3_storage)
+

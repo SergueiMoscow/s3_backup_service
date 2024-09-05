@@ -66,7 +66,7 @@ def get_s3_storage_by_id_service(s3_storage_id: int) -> S3StorageOrm | None:
 def delete_storage_service(s3_storage_id: int) -> None:
     with Session() as session:
         s3_storage = get_storage_by_id(session, s3_storage_id)
-        delete_storage(s3_storage)
+        delete_storage(session, s3_storage)
 
 
 def create_or_get_storage_by_name(s3_storage: S3StorageDTO) -> S3StorageDTO:

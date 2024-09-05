@@ -30,6 +30,7 @@ async def test_post_backup_success(mock_get_client):
         assert response.status_code == 200
         assert response.json() == {"status": "success"}
 
+
 # Тестирование запроса без API_KEY
 @pytest.mark.asyncio
 async def test_post_backup_missing_api_key():

@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, model_validator
 #
 # =================================================================
 
+
 # For files/folders from JSON config:
 class BasicBackupStorage(BaseModel):
     name: str = Field()
@@ -20,6 +21,7 @@ class BackupStorage(BasicBackupStorage):
     """Server config"""
     access_key: str = Field()
     secret_key: str = Field()
+
 
 class BackupItem(BaseModel):
     """For config json items (files or folders)"""
@@ -35,19 +37,21 @@ class BackupItem(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def validate_item_exists(cls, data: Any):
-        if os.path.isfile(data['full_path']):
+        if os.path.isfile(data['path']):
             data['is_file'] = True
-        elif os.path.isdir(data['full_path']):
+        elif os.path.isdir(data['path']):
             data['is_directory'] = True
         else:
-            print(f'Invalid full_path {data["full_path"]}')
-            raise ValueError(f'Invalid full_path {data["full_path"]}')
+            print(f'Invalid path {data["path"]}')
+            raise ValueError(f'Invalid path {data["path"]}')
         return data
+
 
 # For api POST backup:
 class BackupDTO(BaseModel):
     storage: Optional[str] = None
     item: Optional[str] = None
+
 
 # For DB models:
 class S3StorageAddDTO(BaseModel):
@@ -62,7 +66,17 @@ class S3StorageDTO(S3StorageAddDTO):
     id: int | None = None
 
 
+class BucketAddDTO(BaseModel):
+    storage_id: int
+    path: str = Field()
+
+
+class BucketDTO(BucketAddDTO):
+    id: int
+
+
 class S3BackupFileAddDTO(BaseModel):
+    bucket_id: int
     path: str = Field()
     file_name: str = Field()
     file_size: int = Field()
@@ -88,11 +102,13 @@ class S3BackupFileDTO(S3BackupFileAddDTO):
 class S3BackupFileRelDTO(S3BackupFileDTO):
     storage: S3StorageDTO
 
+
 class S3StorageRelDTO(S3StorageDTO):
     items: list['S3BackupFileDTO'] = []
 
+
 # For DB statistics
 class ItemBackedUp(BaseModel):
-    item_path: str  # == full_path из JSON
+    item_path: str
     files_count: int
     size: int

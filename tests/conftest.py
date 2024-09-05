@@ -21,6 +21,7 @@ import time
 
 TEST_BACKUP_DIR = os.path.join(ROOT_DIR, 'tests', 'files_for_tests')
 
+
 @pytest.fixture
 def apply_migrations():
     db_path = settings.TEST_DB_DSN.replace('sqlite:///', '')
@@ -92,6 +93,7 @@ def s3_backup_file_schema():
     file_time = os.path.getmtime(backup_file_name_with_path)
     return S3BackupFileDTO(
         path=TEST_BACKUP_DIR,
+        bucket_id=1,
         file_name=backup_file_name,
         file_size=file_size,
         file_time=file_time,
