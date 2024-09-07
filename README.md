@@ -18,6 +18,7 @@ config.json:
 
 ## Установка:
 `docker compose build`
+
 `docker compose up -d`
 
 После установки внести изменения в .env и config.json
