@@ -11,10 +11,11 @@ from alembic.config import Config
 from common.BackupConfig import BackupConfig
 from common.settings import ROOT_DIR, settings
 from db.engine import Session
-from db.models import S3StorageOrm, BackupFileOrm
+from db.models import S3StorageOrm, BackupFileOrm, BucketOrm
 from repositories.backup_files import create_backup_file
+from repositories.buckets import create_bucket
 from repositories.s3_storages import create_storage
-from common.schemas import S3StorageDTO, S3BackupFileDTO, S3BackupFileRelDTO, S3StorageRelDTO, BackupItem
+from common.schemas import S3StorageDTO, S3BackupFileDTO, S3BackupFileRelDTO, S3StorageRelDTO, BackupItem, BucketDTO
 import os
 import time
 
@@ -50,11 +51,20 @@ def s3_storage_model(faker) -> S3StorageOrm:
 
 
 @pytest.fixture
-def s3_backup_file_model(s3_storage_model, faker) -> BackupFileOrm:
+def bucket_model(s3_storage_model, faker) -> BucketOrm:
+    return BucketOrm(
+        storage=s3_storage_model,
+        path=faker.name(),
+    )
+
+
+@pytest.fixture
+def s3_backup_file_model(s3_storage_model, bucket_model, faker) -> BackupFileOrm:
     return BackupFileOrm(
         storage=s3_storage_model,
-        path=faker.name,
-        file_name=faker.address,
+        bucket=bucket_model,
+        path=faker.name(),
+        file_name=faker.address(),
         file_size=random.randint(0, 1000),
         file_time=faker.date_between(start_date='-12m', end_date='today'),
         created_at=faker.date_between(start_date='-12m', end_date='today'),
@@ -104,8 +114,18 @@ def s3_backup_file_schema():
 @pytest.fixture
 def created_backup_file(s3_backup_file_model):
     with Session() as session:
-        create_storage(session, s3_backup_file_model.storage)
-        create_backup_file(session, s3_backup_file_model)
+        storage = create_storage(session, s3_backup_file_model.storage)
+        session.flush()
+        bucket = create_bucket(session, s3_backup_file_model.bucket)
+        session.flush()
+        backup_file = create_backup_file(session, s3_backup_file_model)
+        session.commit()
+        return S3BackupFileRelDTO.model_validate(backup_file, from_attributes=True)
+    # return {
+    #     # 'storage': S3StorageDTO.model_validate(storage, from_attributes=True),
+    #     # 'bucket': BucketDTO.model_validate(bucket, from_attributes=True),
+    #     'backup_file': S3BackupFileRelDTO.model_validate(backup_file, from_attributes=True),
+    # }
 
 
 def get_backup_files_info(

@@ -75,6 +75,12 @@ class BucketDTO(BucketAddDTO):
     id: int
 
 
+class FileInfo(BaseModel):
+    path: str = Field()
+    size: int = Field()
+    time: datetime = Field()
+
+
 class S3BackupFileAddDTO(BaseModel):
     bucket_id: int
     path: str = Field()
@@ -101,6 +107,7 @@ class S3BackupFileDTO(S3BackupFileAddDTO):
 # For DB Models with relations:
 class S3BackupFileRelDTO(S3BackupFileDTO):
     storage: S3StorageDTO
+    bucket: BucketDTO
 
 
 class S3StorageRelDTO(S3StorageDTO):

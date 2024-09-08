@@ -1,6 +1,9 @@
+from typing import List
+
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
 
+from common.schemas import FileInfo
 from db.models import BackupFileOrm
 
 
@@ -52,12 +55,26 @@ def get_backup_file_by_details(
     return backup_file
 
 
-def get_backed_up_item_info(session: Session, storage_id: int, item_id: int):
+def list_backed_up_files(session: Session, storage_id: int, bucket_id: int) -> List[FileInfo]:
     """
-
     :param session:
     :param storage_id:
     :param bucket_id:
     :return:
     """
-    ...
+    backup_files = session.query(BackupFileOrm).filter_by(
+        storage_id=storage_id,
+        bucket_id=bucket_id,
+    ).all()
+
+    def _build_file_path(file: BackupFileOrm) -> str:
+        return f"{file.bucket.path}/{file.path}/{file.file_name}"
+
+    return [
+        FileInfo(
+            path=_build_file_path(file),
+            size=file.file_size,
+            time=file.file_time
+        )
+        for file in backup_files
+    ]
