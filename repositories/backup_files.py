@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from common.schemas import FileInfo
 from db.models import BackupFileOrm, BucketOrm
+from services.utils import log_vars
 
 
 def create_backup_file(session: Session, backup_file: BackupFileOrm) -> BackupFileOrm:
@@ -79,6 +80,8 @@ def list_backed_up_files(session: Session, storage_id: int, bucket_id: int) -> L
 
     def _build_file_path(file: BackupFileOrm) -> str:
         return str(os.path.join(file.bucket_path, file.path, file.file_name))
+
+    log_vars('list_backed_up_files.log', result=result)
 
     return [
         FileInfo(
