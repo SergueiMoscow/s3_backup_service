@@ -7,7 +7,7 @@ from repositories.s3_storages import get_storage_by_id
 
 async def get_bucket_by_storage_and_path(s3_storage_id: int, path: str) -> BucketOrm | None:
     with Session() as session:
-        bucket = await get_bucket_by_storage_and_path_repository(
+        bucket = get_bucket_by_storage_and_path_repository(
             session=session,
             storage_id=s3_storage_id,
             path=path,

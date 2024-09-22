@@ -1,4 +1,6 @@
+from datetime import timezone
 from typing import List
+import os
 
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
@@ -55,7 +57,7 @@ def get_backup_file_by_details(
     return backup_file
 
 
-async def list_backed_up_files(session: Session, storage_id: int, bucket_id: int) -> List[FileInfo]:
+def list_backed_up_files(session: Session, storage_id: int, bucket_id: int) -> List[FileInfo]:
     """
     :param session:
     :param storage_id:
@@ -68,13 +70,13 @@ async def list_backed_up_files(session: Session, storage_id: int, bucket_id: int
     ).all()
 
     def _build_file_path(file: BackupFileOrm) -> str:
-        return f"{file.bucket.path}/{file.path}/{file.file_name}"
+        return str(os.path.join(file.bucket.path, file.path, file.file_name))
 
     return [
         FileInfo(
             path=_build_file_path(file),
             size=file.file_size,
-            time=file.file_time
+            time=file.file_time.replace(tzinfo=timezone.utc) if file.file_time.tzinfo is None else file.file_time
         )
         for file in backup_files
     ]

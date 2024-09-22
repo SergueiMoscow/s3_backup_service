@@ -15,7 +15,8 @@ from db.models import S3StorageOrm, BackupFileOrm, BucketOrm
 from repositories.backup_files import create_backup_file
 from repositories.buckets import create_bucket
 from repositories.s3_storages import create_storage
-from common.schemas import S3StorageDTO, S3BackupFileDTO, S3BackupFileRelDTO, S3StorageRelDTO, BackupItem, BucketDTO
+from common.schemas import S3StorageDTO, S3BackupFileDTO, S3BackupFileRelDTO, S3StorageRelDTO, BackupItem, BucketDTO, \
+    FileInfo
 import os
 import time
 
@@ -132,7 +133,7 @@ def get_backup_files_info(
     path: str,
     include: list,
     exclude: list,
-) -> List[S3BackupFileDTO]:
+) -> List[FileInfo]:
     if include is None:
         include = []
     if exclude is None:
@@ -147,7 +148,7 @@ def get_backup_files_info(
     if os.path.isdir(path):
         for root, dirs, files in os.walk(path):
             for file in files:
-                file_extension = os.path.splitext(file)[1].lower()
+                file_extension = os.path.splitext(file)[1].lower()[1:]
 
                 # Проверка расширений файла
                 if include and file_extension not in include:
@@ -156,11 +157,13 @@ def get_backup_files_info(
                     continue
 
                 file_path = os.path.join(root, file)
-                file_info = S3BackupFileDTO(
-                    path=os.path.relpath(root, path),
-                    file_name=file,
-                    file_size=os.path.getsize(file_path),
-                    file_time=time.ctime(os.path.getmtime(file_path))
+                file_time = os.path.getmtime(path)
+                file_time_utc = datetime.fromtimestamp(file_time, tz=timezone.utc)
+
+                file_info = FileInfo(
+                    path=os.path.join(path, file),
+                    size=os.path.getsize(file_path),
+                    time=file_time_utc
                 )
                 file_info_list.append(file_info)
 
@@ -177,11 +180,10 @@ def get_backup_files_info(
         file_size = os.path.getsize(path)
         file_time = os.path.getmtime(path)
         file_time_utc = datetime.fromtimestamp(file_time, tz=timezone.utc)
-        backup_file_dto = S3BackupFileDTO(
-            path='',
-            file_name=file_name,
-            file_size=file_size,
-            file_time=file_time_utc,
+        backup_file_dto = FileInfo(
+            path=path,
+            size=file_size,
+            time=file_time_utc,
         )
         file_info_list.append(backup_file_dto)
 
@@ -197,24 +199,40 @@ def fill_db_with_backed_up_files():
     with Session() as session:
         backup_config = BackupConfig()
         for backup_storage in backup_config.backup_storages:
+            storage_orm = S3StorageOrm(
+                name=backup_storage.name,
+                url=backup_storage.url,
+                access_key=backup_storage.access_key,
+                secret_key=backup_storage.secret_key,
+            )
+            session.add(storage_orm)
+            session.flush()
+
             for item in backup_storage.items:
-                storage_orm = S3StorageOrm(
-                    name=backup_storage.name,
-                    url=item.url,
-                    access_key=item.access_key,
-                    storage_key=item.storage_key,
+                bucket_orm = BucketOrm(
+                    storage_id=storage_orm.id,
+                    path=item.path,
                 )
-                session.add(storage_orm)
+                session.add(bucket_orm)
                 session.flush()
 
                 files = get_backup_files_info(item.path, item.include, item.exclude)
                 for file in files:
+                    full_path = os.path.dirname(file.path).rstrip(os.sep)
+                    if full_path == item.path:
+                        relative_path = ''
+                    else:
+                        relative_path = os.path.relpath(full_path, item.path)
+                    file_time = os.path.getmtime(file.path)
+                    file_time_utc = datetime.fromtimestamp(file_time, tz=timezone.utc)
+
                     backup_file_orm = BackupFileOrm(
                         storage_id=storage_orm.id,
-                        path=file.path,
-                        file_name=file.filename,
-                        file_size=file.file_size,
-                        file_time=file.file_time,
+                        bucket_id=bucket_orm.id,
+                        path=relative_path,
+                        file_name=os.path.basename(file.path),
+                        file_size=file.size,
+                        file_time=file_time_utc,
                     )
                     session.add(backup_file_orm)
                     session.flush()

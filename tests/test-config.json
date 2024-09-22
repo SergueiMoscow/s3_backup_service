@@ -13,13 +13,6 @@
             "bucket": "your_bucket_name",
             "include": ["png", "avi", "mov", "mp4", "jpg"],
             "exclude": []
-          },
-          {
-            "name": "Documents",
-            "path": "this path will be changed for test",
-            "bucket": "your_bucket_name",
-            "include": ["doc", "xls", "txt", "pdf", "jpg"],
-            "exclude": []
           }
         ]
       }

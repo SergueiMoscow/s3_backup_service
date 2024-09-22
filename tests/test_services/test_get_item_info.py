@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -20,7 +20,7 @@ def test_list_files_recursive():
             expected_result.append(FileInfo(
                 path=os.path.join(TEST_BACKUP_DIR, entry),
                 size=os.path.getsize(entry.path),
-                time=datetime.fromtimestamp(os.path.getmtime(entry.path)),
+                time=datetime.fromtimestamp(os.path.getmtime(entry.path), tz=timezone.utc),
             ))
     result = list_files_recursive(TEST_BACKUP_DIR, ['png'])
     assert result
@@ -42,3 +42,19 @@ async def test_get_bucket_info_service_empty_db(backup_config):
     assert result['status'] == 'Ok'
     assert isinstance(result['new'], list)
     assert len(result['new']) > 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('apply_migrations')
+async def test_get_bucket_info_service_with_db_record(backup_config, fill_db_with_backed_up_files):
+    first_config_storage = backup_config.backup_storages[0]
+    first_config_item = first_config_storage.items[0]
+    backup_dto = BackupDTO(
+        storage = first_config_storage.name,
+        item = first_config_item.name,
+    )
+    result = await get_bucket_info_service(data=backup_dto)
+    assert result['deleted'] == []
+    assert result['updated'] == []
+    assert result['new'] == []
+    assert result['status'] == 'Ok'
