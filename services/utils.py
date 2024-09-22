@@ -23,7 +23,7 @@ def log_vars(file_name, **kwargs):
     :param file_name: Имя файла для записи значений.
     :param kwargs: Переменные для записи в файл.
     """
-    with open(file_name, 'a') as log_file:
+    with open(file_name, 'w') as log_file:
         for var_name, value in kwargs.items():
             log_file.write(f"{var_name}:\n")
 

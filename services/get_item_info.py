@@ -81,11 +81,11 @@ async def get_bucket_info_service(data: BackupDTO) -> Dict[str, List[FileInfo]]:
     # Ищем удаленные файлы
     real_files_paths = {file.path for file in real_files}
     deleted_files = [file for file in backed_up_files if file.path not in real_files_paths]
-    # log_vars(
-    #     file_name=os.path.join(ROOT_DIR, 'test.log'),
-    #     backed_up_files_dict=backed_up_files_dict,
-    #     real_files_paths=real_files_paths,
-    # )
+    log_vars(
+        file_name=os.path.join(ROOT_DIR, 'test.log'),
+        backed_up_files_dict=backed_up_files_dict,
+        real_files_paths=real_files_paths,
+    )
     return {'status': 'Ok', 'new': new_files, 'updated': updated_files, 'deleted': deleted_files}
 
 
