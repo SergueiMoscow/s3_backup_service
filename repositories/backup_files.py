@@ -65,7 +65,7 @@ def list_backed_up_files(session: Session, storage_id: int, bucket_id: int) -> L
     :param bucket_id:
     :return:
     """
-    result = session.query(
+    rows = session.query(
         BackupFileOrm.file_name,
         BackupFileOrm.file_size,
         BackupFileOrm.file_time,
@@ -81,13 +81,15 @@ def list_backed_up_files(session: Session, storage_id: int, bucket_id: int) -> L
     # def _build_file_path(file: BackupFileOrm) -> str:
     #     return str(os.path.join(file.bucket_path, file.path, file.file_name))
 
-    log_vars('list_backed_up_files.log', result=result)
+    log_vars('list_backed_up_files.log', result=rows)
 
-    return [
+    result = [
         FileInfo(
             path=os.path.join(file.bucket_path, file.path, file.file_name),
             size=file.file_size,
             time=file.file_time.replace(tzinfo=timezone.utc) if file.file_time.tzinfo is None else file.file_time
         )
-        for file in result
+        for file in rows
     ]
+    log_vars('backup_files_result', result=result)
+    return result
