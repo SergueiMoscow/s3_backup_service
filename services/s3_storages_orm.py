@@ -78,10 +78,11 @@ def create_or_get_storage_by_name(s3_storage: S3StorageDTO) -> S3StorageDTO:
     return create_s3_storage_service(s3_storage)
 
 
-def get_storage_by_name_service(s3_storage_name: str) -> S3StorageDTO:
+def get_storage_by_name_service(s3_storage_name: str) -> S3StorageDTO | None:
     with Session() as session:
         storage_orm = get_storage_by_name(session, s3_storage_name)
         if storage_orm is not None:
             return S3StorageDTO.model_validate(storage_orm, from_attributes=True)
         else:
-            raise S3StorageError(status_code=400, detail='Invalid storage name %s'.format(s3_storage_name))
+            return None
+            # raise S3StorageError(status_code=400, detail='Invalid storage name %s'.format(s3_storage_name))

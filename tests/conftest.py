@@ -219,3 +219,9 @@ def fill_db_with_backed_up_files():
                     session.add(backup_file_orm)
                     session.flush()
         session.commit()
+
+
+@pytest.fixture
+def backup_config():
+    backup_config = BackupConfig()
+    return backup_config
