@@ -48,8 +48,8 @@ async def get_bucket_info_service(data: BackupDTO) -> Dict[str, List[FileInfo]]:
     if s3_storage is None:
         backed_up_files = []
         # return {'message': 'No backups found for storage %s' % data.storage}
-    # bucket = await get_bucket_by_storage_and_path(s3_storage.id, bucket.path)
     else:
+        bucket = await get_bucket_by_storage_and_path(s3_storage.id, bucket.path)
         with Session() as session:
             # Собираем список файлов из БД
             backed_up_files: List[FileInfo] = list_backed_up_files(
