@@ -6,7 +6,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.orm import Session, selectinload
 
 from common.schemas import FileInfo
-from db.models import BackupFileOrm
+from db.models import BackupFileOrm, BucketOrm
 
 
 def create_backup_file(session: Session, backup_file: BackupFileOrm) -> BackupFileOrm:
@@ -64,14 +64,21 @@ def list_backed_up_files(session: Session, storage_id: int, bucket_id: int) -> L
     :param bucket_id:
     :return:
     """
-    backup_files = session.query(BackupFileOrm).options(
-        selectinload(BackupFileOrm.bucket)
-    ).filter_by(
-        storage_id=storage_id,
-        bucket_id=bucket_id,
+    result = session.query(
+        BackupFileOrm.file_name,
+        BackupFileOrm.file_size,
+        BackupFileOrm.file_time,
+        BackupFileOrm.path,
+        BucketOrm.path.label('bucket_path')
+    ).join(
+        BucketOrm, BackupFileOrm.bucket_id == BucketOrm.id
+    ).filter(
+        BackupFileOrm.storage_id == storage_id,
+        BackupFileOrm.bucket_id == bucket_id
     ).all()
+
     def _build_file_path(file: BackupFileOrm) -> str:
-        return str(os.path.join(file.bucket.path, file.path, file.file_name))
+        return str(os.path.join(file.bucket_path, file.path, file.file_name))
 
     return [
         FileInfo(
