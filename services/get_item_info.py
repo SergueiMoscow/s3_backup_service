@@ -52,7 +52,7 @@ async def get_bucket_info_service(data: BackupDTO) -> Dict[str, List[FileInfo]]:
         bucket = await get_bucket_by_storage_and_path(s3_storage.id, bucket.path)
         with Session() as session:
             # Собираем список файлов из БД
-            backed_up_files: List[FileInfo] = list_backed_up_files(
+            backed_up_files: List[FileInfo] = await list_backed_up_files(
                 session=session,
                 storage_id=s3_storage.id,
                 bucket_id=bucket.id

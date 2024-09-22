@@ -55,7 +55,7 @@ def get_backup_file_by_details(
     return backup_file
 
 
-def list_backed_up_files(session: Session, storage_id: int, bucket_id: int) -> List[FileInfo]:
+async def list_backed_up_files(session: Session, storage_id: int, bucket_id: int) -> List[FileInfo]:
     """
     :param session:
     :param storage_id:
