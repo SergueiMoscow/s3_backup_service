@@ -86,5 +86,5 @@ def list_backed_up_files(session: Session, storage_id: int, bucket_id: int) -> L
             size=file.file_size,
             time=file.file_time.replace(tzinfo=timezone.utc) if file.file_time.tzinfo is None else file.file_time
         )
-        for file in backup_files
+        for file in result
     ]
