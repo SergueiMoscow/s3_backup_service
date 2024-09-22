@@ -78,14 +78,18 @@ def list_backed_up_files(session: Session, storage_id: int, bucket_id: int) -> L
         BackupFileOrm.bucket_id == bucket_id
     ).all()
 
-    # def _build_file_path(file: BackupFileOrm) -> str:
-    #     return str(os.path.join(file.bucket_path, file.path, file.file_name))
+    def _build_file_path(file) -> str:
+        # Удаляем начальные слэши и затем объединяем части пути
+        path_components = [file.bucket_path.lstrip('/'), file.path.lstrip('/'), file.file_name.lstrip('/')]
+        joined_path = os.path.join(*path_components)
+        # Добавляем начальный слэш, если только путь не становится пустым (на случай, если все части были пустыми)
+        return f'/{joined_path}' if joined_path else '/'
 
-    log_vars('list_backed_up_files.log', result=rows)
+    log_vars('list_backed_up_files.log', rows=rows)
 
     result = [
         FileInfo(
-            path=os.path.join(file.bucket_path, file.path, file.file_name),
+            path=_build_file_path(file),
             size=file.file_size,
             time=file.file_time.replace(tzinfo=timezone.utc) if file.file_time.tzinfo is None else file.file_time
         )
