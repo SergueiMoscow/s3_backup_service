@@ -1,14 +1,18 @@
+import os
 from pathlib import Path
 from typing import Dict, List
 
 from common.BackupConfig import BackupConfig
 from common.schemas import BackupDTO, BucketAddDTO, BucketDTO, S3BackupFileDTO, FileInfo, BackupItem
+from common.settings import ROOT_DIR
 from db.engine import Session
 from db.models import BucketOrm, BackupFileOrm
 from repositories.backup_files import list_backed_up_files
 from services.bucket_orm import get_bucket_by_storage_and_path
 from services.s3_storages_orm import get_storage_by_name_service
 from datetime import datetime, timezone
+
+from services.utils import log_vars
 
 
 async def get_bucket_config_by_name(item_name: str) -> BackupItem:
@@ -77,7 +81,11 @@ async def get_bucket_info_service(data: BackupDTO) -> Dict[str, List[FileInfo]]:
     # Ищем удаленные файлы
     real_files_paths = {file.path for file in real_files}
     deleted_files = [file for file in backed_up_files if file.path not in real_files_paths]
-
+    log_vars(
+        file_name=os.path.join(ROOT_DIR, 'test.log'),
+        backed_up_files_dict=backed_up_files_dict,
+        real_files_paths=real_files_paths,
+    )
     return {'status': 'Ok', 'new': new_files, 'updated': updated_files, 'deleted': deleted_files}
 
 
