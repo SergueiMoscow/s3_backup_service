@@ -3,7 +3,7 @@ from typing import List
 import os
 
 from sqlalchemy import and_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from common.schemas import FileInfo
 from db.models import BackupFileOrm
@@ -64,11 +64,12 @@ def list_backed_up_files(session: Session, storage_id: int, bucket_id: int) -> L
     :param bucket_id:
     :return:
     """
-    backup_files = session.query(BackupFileOrm).filter_by(
+    backup_files = session.query(BackupFileOrm).options(
+        selectinload(BackupFileOrm.bucket)
+    ).filter_by(
         storage_id=storage_id,
         bucket_id=bucket_id,
     ).all()
-
     def _build_file_path(file: BackupFileOrm) -> str:
         return str(os.path.join(file.bucket.path, file.path, file.file_name))
 
