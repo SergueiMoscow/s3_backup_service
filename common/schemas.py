@@ -114,8 +114,8 @@ class S3StorageRelDTO(S3StorageDTO):
     items: list['S3BackupFileDTO'] = []
 
 
-# For DB statistics
-class ItemBackedUp(BaseModel):
-    item_path: str
-    files_count: int
+# For statistics
+class FileGroup(BaseModel):
+    count: int
     size: int
+    files: list[FileInfo] = []

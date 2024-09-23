@@ -37,11 +37,11 @@ async def test_get_bucket_info_service_empty_db(backup_config):
         item = first_config_item.name,
     )
     result = await get_bucket_info_service(data=backup_dto)
-    assert result['deleted'] == []
-    assert result['updated'] == []
+    assert result['deleted'].count == 0
+    assert result['updated'].count == 0
     assert result['status'] == 'Ok'
-    assert isinstance(result['new'], list)
-    assert len(result['new']) > 0
+    assert isinstance(result['new'].files, list)
+    assert len(result['new'].files) > 0
 
 
 @pytest.mark.asyncio
@@ -54,7 +54,7 @@ async def test_get_bucket_info_service_with_db_record(backup_config, fill_db_wit
         item = first_config_item.name,
     )
     result = await get_bucket_info_service(data=backup_dto)
-    assert result['deleted'] == []
-    assert result['updated'] == []
-    assert result['new'] == []
+    assert result['deleted'].files == []
+    assert result['updated'].files == []
+    assert result['new'].files == []
     assert result['status'] == 'Ok'

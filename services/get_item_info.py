@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from common.BackupConfig import BackupConfig
-from common.schemas import BackupDTO, BucketAddDTO, BucketDTO, S3BackupFileDTO, FileInfo, BackupItem
+from common.schemas import BackupDTO, BucketAddDTO, BucketDTO, S3BackupFileDTO, FileInfo, BackupItem, FileGroup
 from common.settings import ROOT_DIR
 from db.engine import Session
 from db.models import BucketOrm, BackupFileOrm
@@ -39,7 +39,13 @@ async def get_bucket_config_by_name(item_name: str) -> BackupItem:
     return backup_item
 
 
-async def get_bucket_info_service(data: BackupDTO) -> Dict[str, List[FileInfo]]:
+def count_files_and_size(file_info_list: list[FileInfo]) -> FileGroup:
+    total_files = len(file_info_list)
+    total_size = sum(file_info.size for file_info in file_info_list)
+    return FileGroup(count=total_files, size=total_size, files=file_info_list)
+
+
+async def get_bucket_info_service(data: BackupDTO) -> Dict[str, FileGroup]:
     # Находим storage и bucket в конфиге (json)
     bucket: BackupItem = await get_bucket_config_by_name(data.item)
 
@@ -47,17 +53,14 @@ async def get_bucket_info_service(data: BackupDTO) -> Dict[str, List[FileInfo]]:
     real_files: List[FileInfo] = list_files_recursive(bucket.path, bucket.include, bucket.exclude)
 
     # Ищем storage в БД
+    backed_up_files: List[FileInfo] = []
     s3_storage = get_storage_by_name_service(data.storage)
-    if s3_storage is None:
-        backed_up_files = []
-    else:
+    if s3_storage is not None:
         bucket = await get_bucket_by_storage_and_path(s3_storage.id, bucket.path)
-        if bucket is None:
-            backed_up_files = []
-        else:
+        if bucket is not None:
             with Session() as session:
                 # Собираем список файлов из БД
-                backed_up_files: List[FileInfo] = list_backed_up_files(
+                backed_up_files = list_backed_up_files(
                     session=session,
                     storage_id=s3_storage.id,
                     bucket_id=bucket.id
@@ -86,7 +89,13 @@ async def get_bucket_info_service(data: BackupDTO) -> Dict[str, List[FileInfo]]:
         backed_up_files_dict=backed_up_files_dict,
         real_files_paths=real_files_paths,
     )
-    return {'status': 'Ok', 'new': new_files, 'updated': updated_files, 'deleted': deleted_files}
+    return {
+        'status': 'Ok',
+        'new': count_files_and_size(new_files),
+        'updated': count_files_and_size(updated_files),
+        'deleted': count_files_and_size(deleted_files),
+        'backed_up': count_files_and_size(backed_up_files),
+    }
 
 
 def list_files_recursive(
